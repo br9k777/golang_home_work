@@ -12,9 +12,13 @@ import (
 func init() {
 	// log.SetFormatter(&log.TextFormatter{})
 	log.SetFormatter(&log.TextFormatter{TimestampFormat: "2006-01-02 15:04:05.00", FullTimestamp: true})
-	log.SetOutput(os.Stdout)
+	log.SetOutput(os.Stderr)
 	log.SetLevel(log.InfoLevel)
-
+	//для вывода на экран - предпологается что первый лог идет в файл, второй на экран - пока не удалось реализвать
+	// logError := log.New()
+	// logError.Formatter=&log.TextFormatter{TimestampFormat: "2006-01-02 15:04:05.00", FullTimestamp: true}
+	// logError.SetOutput(os.Stderr)
+	// log.SetLevel(log.Warn)
 }
 
 func main() {
@@ -76,7 +80,7 @@ func main() {
 			if timeFromServer, err := ntp.Time(c.String(`ntp-server`)); err == nil {
 				fmt.Printf(`Получили время от NTP сервера %s раное %s`+"\n", c.String(`ntp-server`), timeFromServer.String())
 			} else {
-				fmt.Printf("Не удалось получить время от NTP сервера %s\n%s\n", c.String(`ntp-server`), err)
+				log.Errorf("Не удалось получить время от NTP сервера %s\n%s\n", c.String(`ntp-server`), err)
 			}
 		}
 		return nil
