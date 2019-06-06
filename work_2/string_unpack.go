@@ -69,11 +69,12 @@ func StringUnpack(inputString string) string {
 	escapeCharacter := false
 	var lastRune string
 	var totalRepeat, digit int32
-
 	for _, oneRune := range inputString {
+		log.Debugf(`Read rune %s`, string(oneRune))
 		switch {
 		case string(oneRune) == `\`:
 			repeatAndWrite(lastRune, totalRepeat)
+			totalRepeat = 0
 			if escapeCharacter {
 				//ло этого уже был \
 				lastRune = `\`
