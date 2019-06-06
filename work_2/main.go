@@ -30,6 +30,10 @@ func main() {
 			Usage: "Распакавать строку",
 		},
 		cli.BoolFlag{
+			Name:  "test",
+			Usage: "set debug level for log and output stdout",
+		},
+		cli.BoolFlag{
 			Name:  "debug",
 			Usage: "set debug level for log and output stdout",
 		},
@@ -45,7 +49,14 @@ func main() {
 		}
 
 		if c.String(`unpack`) != `` {
-			fmt.Fprintf(os.Stderr, "Original string= %s\nUnpack string =%s\n", c.String(`unpack`), fmt.StringUnpack(c.String(`unpack`)))
+			fmt.Fprintf(os.Stderr, "Original string= %s\nUnpack string =%s\n", c.String(`unpack`), StringUnpack(c.String(`unpack`)))
+		}
+		if c.Bool("test") {
+			fmt.Fprintf(os.Stderr, "Original string= %s\t|Unpack string =%s\n", `a4bc2d5e`, StringUnpack(`a4bc2d5e`))
+			fmt.Fprintf(os.Stderr, "Original string= %s\t|Unpack string =%s\n", `abcd`, StringUnpack(`abcd`))
+			fmt.Fprintf(os.Stderr, "Original string= %s\t|Unpack string =%s\n", `45`, StringUnpack(`45`))
+			fmt.Fprintf(os.Stderr, "Original string= %s\t|Unpack string =%s\n", `qwe\4\5`, StringUnpack(`qwe\4\5`))
+			fmt.Fprintf(os.Stderr, "Original string= %s\t|Unpack string =%s\n", `qwe\\5`, StringUnpack(`qwe\\5`))
 		}
 		return nil
 	}

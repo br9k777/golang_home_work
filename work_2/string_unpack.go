@@ -2,14 +2,11 @@ package main
 
 import (
 	log "github.com/sirupsen/logrus"
+	"os"
 	"strings"
 )
 
-var (
-	//хранилище ссылок
-	UrlBaseByShortName map[string]*Url
-	UrlBaseByLongName  map[string]*Url
-)
+var outputString strings.Builder
 
 //проверяем являяется ли руна число и возвращем число
 func isDigit(oneRune string, digit *int32) bool {
@@ -51,27 +48,32 @@ func isDigit(oneRune string, digit *int32) bool {
 		return false
 	}
 }
-func (out *strings.Builder) repeatAndWrite(OneRune *rune, repeat *int32) {
+func repeatAndWrite(OneRune string, repeat int32) {
 	if OneRune == `` {
 		return
 	}
-	for i := 0; i < repeat; i++ {
-		out.WriteRune(OneRune)
+	if repeat == 0 {
+		outputString.WriteString(OneRune)
+	}
+	var i int32
+	log.Debugf(`write rune = %s ,repeat=%d`, OneRune, repeat)
+	for i = 0; i < repeat; i++ {
+		outputString.WriteString(OneRune)
 	}
 	OneRune = ``
 	repeat = 0
 }
 
 func StringUnpack(inputString string) string {
+	outputString.Reset()
 	escapeCharacter := false
-	var lastRune rune
+	var lastRune string
 	var totalRepeat, digit int32
-	var outputString strings.Builder
+
 	for _, oneRune := range inputString {
 		switch {
-
-		case oneRune == `\`:
-			outputString.repeatAndWrite(lastRune, lastRuneIsDigit)
+		case string(oneRune) == `\`:
+			repeatAndWrite(lastRune, totalRepeat)
 			if escapeCharacter {
 				//ло этого уже был \
 				lastRune = `\`
@@ -81,21 +83,21 @@ func StringUnpack(inputString string) string {
 				escapeCharacter = true
 			}
 		case escapeCharacter:
-			outputString.repeatAndWrite(lastRune, lastRuneIsDigit)
+			repeatAndWrite(lastRune, totalRepeat)
 			escapeCharacter = false
 			totalRepeat = 0
-			lastRune = oneRune
+			lastRune = string(oneRune)
 
-		case isDigit(oneRune, digit):
+		case isDigit(string(oneRune), &digit):
 			totalRepeat = totalRepeat*10 + digit
 		default:
-			outputString.repeatAndWrite(lastRune, lastRuneIsDigit)
+			repeatAndWrite(lastRune, totalRepeat)
 			escapeCharacter = false
 			totalRepeat = 0
-			lastRune = oneRune
+			lastRune = string(oneRune)
 		}
 	}
-	outputString.repeatAndWrite(lastRune, lastRuneIsDigit)
+	repeatAndWrite(lastRune, totalRepeat)
 
 	return outputString.String()
 }
