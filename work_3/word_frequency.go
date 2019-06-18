@@ -4,12 +4,16 @@ import (
 	"bufio"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"os"
 	"regexp"
 	"sort"
-	"strings"
 
 	log "github.com/sirupsen/logrus"
+)
+
+var (
+	logErr log.Logger
 )
 
 type wordStruct struct {
@@ -17,67 +21,63 @@ type wordStruct struct {
 	word  string
 }
 
-//ReadWordsFromFile открываем файл достаем слова
-func ReadWordsFromFile(filePath string) ([]string, error) {
-	var file os.FileInfo
-	var fileErr error
-	if file, fileErr = os.Stat(filePath); os.IsNotExist(fileErr) || !file.Mode().IsRegular() {
-		log.Errorf(`Not exist regular file %s`, filePath)
-		return nil, fileErr
-	}
-	if fileErr != nil {
-		log.Errorf(`Какая то новая злая ошибка прии чтении файла%s`, filePath)
-		return nil, fileErr
-	}
-	var openedFile *os.File
-	if openedFile, fileErr = os.Open(filePath); fileErr == nil {
+//ShowHightFrequencyWords основная функция читает файл находит слова, подсчитывает их
+func ShowHightFrequencyWords(filePath string) error {
 
-		defer openedFile.Close()
-		f := bufio.NewReader(openedFile)
-		// сделаем задел сразу на 100 слов чтоб уменшить количество реолакаций
-		var words = make([]string, 0, 100)
-		var bufError error
-		buf := make([]byte, 1024)
-		for {
-			//isPrefix возвращаемое вторым значением слшиком сложно для меня
-			// пока будем сччиитать что слишком длиннных строк в файле нет
-			buf, _, bufError = f.ReadLine()
-			if bufError != nil {
-				if bufError == io.EOF {
-					break
-				}
-				return nil, bufError
-			}
-			//на уроке предлагали пакет string
-			worsFromStrings := strings.Fields(string(buf))
-			words = append(words, worsFromStrings...)
-
+	content, err := ioutil.ReadFile(filePath)
+	if err != nil {
+		logErr.Error(err)
+		return err
+	}
+	return nil
+	words, err := GetSliceOfWords(content)
+	if err != nil {
+		logErr.Error(err)
+		return err
+	}
+	for i, w := range words {
+		if i > 9 {
+			break
 		}
-		return words, nil
+		fmt.Fprintf(os.Stdout, "%-3d Word: %s\tcount= %d\n", i+1, w.Word, w.Count)
 	}
-	return nil, fileErr
+	return nil
 }
 
 //ShowHightFrequencyWords показать самые часто иссполььзуемые слова
-func ShowHightFrequencyWords(filePath string) {
-	var words []string
-	var fileError error
-	if words, fileError = ReadWordsFromFile(filePath); fileError != nil {
-		log.Error(fileError)
-		return
+func GetSliceOfWords(biteWithWords []byte) ([]string, error) {
+	// var words []string
+	var bufError error
+	var w struct {
+		Count int
+		Word  string
 	}
-	// а теперь пройдемся повторно учитывая знаки разделения
-	var totalWordSum = make(map[string]*wordStruct, 100)
-	for _, word := range words {
-		newWords := regexp.MustCompile(`(\w|[а-яА-Я\_])+`).FindAllString(word, -1)
+	buf := make([]byte, 1024)
+	// пройдемся учитывая знаки разделения
+	var totalWordSum = make(map[string]interface{}, 100)
+	reader := bufio.NewReader(biteWithWords)
+
+	for {
+		buf, _, bufError = reader.ReadLine()
+		if bufError != nil {
+			if bufError == io.EOF {
+				break
+			}
+			return nil, bufError
+		}
+		newWords := regexp.MustCompile(`(\w|[а-яА-Я\_])+`).FindAllString(string(buf), -1)
 		for _, s := range newWords {
 			// totalWordSum[s]++
+
 			if w, ok := totalWordSum[s]; ok {
-				w.count++
+				w.Count = w.Count + 1
 			} else {
-				totalWordSum[s] = &wordStruct{
-					count: 1,
-					word:  s,
+				totalWordSum[s] = &struct {
+					Count int
+					Word  string
+				}{
+					Count: 1,
+					Word:  s,
 				}
 			}
 		}
@@ -90,15 +90,11 @@ func ShowHightFrequencyWords(filePath string) {
 	sort.Slice(totalWordSumArray, func(i, j int) bool {
 		return totalWordSumArray[i].count >= totalWordSumArray[j].count
 	})
-	for i, w := range totalWordSumArray {
-		if i > 9 {
-			break
-		}
-		fmt.Fprintf(os.Stderr, "%-3d Word: %s\tcount= %d\n", i+1, w.word, w.count)
-	}
+	return totalWordSumArray, nil
 }
 
 func init() {
 	log.SetFormatter(&log.TextFormatter{TimestampFormat: "2006-01-02 15:04:05.00", FullTimestamp: true})
 	log.SetOutput(os.Stderr)
+	logErr = log.New(os.Stderr, ``, 0)
 }
