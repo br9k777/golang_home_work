@@ -2,99 +2,56 @@ package main
 
 import (
 	"bufio"
-	"fmt"
-	"io"
-	"io/ioutil"
-	"os"
 	"regexp"
 	"sort"
-
-	log "github.com/sirupsen/logrus"
+	"strings"
 )
 
-var (
-	logErr log.Logger
-)
+const numberOfMostCommonWordsToDisplay = 10
 
-type wordStruct struct {
-	count int
-	word  string
-}
-
-//ShowHightFrequencyWords основная функция читает файл находит слова, подсчитывает их
-func ShowHightFrequencyWords(filePath string) error {
-
-	content, err := ioutil.ReadFile(filePath)
-	if err != nil {
-		logErr.Error(err)
-		return err
-	}
-	return nil
-	words, err := GetSliceOfWords(content)
-	if err != nil {
-		logErr.Error(err)
-		return err
-	}
-	for i, w := range words {
-		if i > 9 {
-			break
-		}
-		fmt.Fprintf(os.Stdout, "%-3d Word: %s\tcount= %d\n", i+1, w.Word, w.Count)
-	}
-	return nil
-}
-
-//ShowHightFrequencyWords показать самые часто иссполььзуемые слова
+//GetSliceOfWords показать самые часто иссполььзуемые слова
 func GetSliceOfWords(biteWithWords []byte) ([]string, error) {
-	// var words []string
-	var bufError error
-	var w struct {
-		Count int
-		Word  string
-	}
-	buf := make([]byte, 1024)
-	// пройдемся учитывая знаки разделения
-	var totalWordSum = make(map[string]interface{}, 100)
-	reader := bufio.NewReader(biteWithWords)
+	// var err error
 
-	for {
-		buf, _, bufError = reader.ReadLine()
-		if bufError != nil {
-			if bufError == io.EOF {
-				break
-			}
-			return nil, bufError
-		}
-		newWords := regexp.MustCompile(`(\w|[а-яА-Я\_])+`).FindAllString(string(buf), -1)
+	type word struct {
+		count int
+		word  string
+	}
+	// пройдемся учитывая знаки разделения
+	var totalWordSum = make(map[string]*word, 100)
+	scanner := bufio.NewScanner(strings.NewReader(string(biteWithWords)))
+
+	for scanner.Scan() {
+		newWords := regexp.MustCompile(`(\w|[а-яА-Я\_])+`).FindAllString(string(scanner.Text()), -1)
 		for _, s := range newWords {
 			// totalWordSum[s]++
 
 			if w, ok := totalWordSum[s]; ok {
-				w.Count = w.Count + 1
-			} else {
-				totalWordSum[s] = &struct {
-					Count int
-					Word  string
-				}{
-					Count: 1,
-					Word:  s,
-				}
+				w.count = w.count + 1
+				continue
 			}
+			totalWordSum[s] = &word{
+				count: 1,
+				word:  s,
+			}
+
 		}
 	}
 	//обратно в масив для сортировки
-	var totalWordSumArray = make([]*wordStruct, 0, 300)
+	var totalWordSumArray = make([]*word, 0, len(totalWordSum))
 	for _, w := range totalWordSum {
 		totalWordSumArray = append(totalWordSumArray, w)
 	}
 	sort.Slice(totalWordSumArray, func(i, j int) bool {
-		return totalWordSumArray[i].count >= totalWordSumArray[j].count
+		if totalWordSumArray[i].count == totalWordSumArray[j].count {
+			return sort.StringsAreSorted([]string{totalWordSumArray[i].word, totalWordSumArray[j].word})
+		}
+		return totalWordSumArray[i].count > totalWordSumArray[j].count
 	})
-	return totalWordSumArray, nil
-}
-
-func init() {
-	log.SetFormatter(&log.TextFormatter{TimestampFormat: "2006-01-02 15:04:05.00", FullTimestamp: true})
-	log.SetOutput(os.Stderr)
-	logErr = log.New(os.Stderr, ``, 0)
+	// если слов больше нужного количество то возвращаем толко десять
+	resultWords := make([]string, 0, numberOfMostCommonWordsToDisplay)
+	for i := 0; i < len(totalWordSumArray) && i < numberOfMostCommonWordsToDisplay; i++ {
+		resultWords = append(resultWords, totalWordSumArray[i].word)
+	}
+	return resultWords, nil
 }

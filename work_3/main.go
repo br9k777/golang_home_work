@@ -1,17 +1,25 @@
 package main
 
 import (
+	"fmt"
+	"io/ioutil"
 	"os"
 
-	log "github.com/sirupsen/logrus"
 	"github.com/urfave/cli"
+	"go.uber.org/zap"
+)
+
+var (
+	log *zap.Logger
 )
 
 func init() {
-	// log.SetFormatter(&log.TextFormatter{})
-	log.SetFormatter(&log.TextFormatter{TimestampFormat: "2006-01-02 15:04:05.00", FullTimestamp: true})
-	log.SetOutput(os.Stdout)
-	log.SetLevel(log.InfoLevel)
+	var err error
+	if log, err = zap.NewProduction(); err != nil {
+		fmt.Fprint(os.Stderr, err)
+		os.Exit(1)
+	}
+	zap.ReplaceGlobals(log)
 }
 
 func main() {
@@ -32,20 +40,37 @@ func main() {
 		},
 	}
 
-	//
-
+	defer log.Sync()
+	var err error
 	app.Action = func(c *cli.Context) error {
 
 		if c.Bool("debug") {
-			log.SetLevel(log.DebugLevel)
-			log.SetOutput(os.Stderr)
+			if log, err = zap.NewDevelopment(); err != nil {
+				fmt.Fprint(os.Stderr, err)
+				os.Exit(1)
+			}
 		}
 
 		if c.String(`words-file-path`) != `` {
-			ShowHightFrequencyWords(c.String(`words-file-path`))
+			var content []byte
+			var err error
+			if content, err = ioutil.ReadFile(c.String(`words-file-path`)); err != nil {
+				return err
+			}
+			var words []string
+			if words, err = GetSliceOfWords(content); err != nil {
+				return err
+			}
+			for _, w := range words {
+				fmt.Fprintf(os.Stdout, "%s\n", w)
+			}
+			return nil
 		}
 		return nil
 	}
-	app.Run(os.Args)
+
+	if err = app.Run(os.Args); err != nil {
+		log.Error(`Ошибка выпорлнения`, zap.Error(err))
+	}
 
 }
