@@ -13,12 +13,15 @@ const numberOfMostCommonWordsToDisplay = 10
 func GetSliceOfWords(biteWithWords []byte) ([]string, error) {
 	// var err error
 
-	type word struct {
+	// type word struct {
+	// 	count int
+	// 	word  string
+	// }
+	// пройдемся учитывая знаки разделения
+	var totalWordSum = make(map[string]*struct {
 		count int
 		word  string
-	}
-	// пройдемся учитывая знаки разделения
-	var totalWordSum = make(map[string]*word, 100)
+	}, 100)
 	scanner := bufio.NewScanner(strings.NewReader(string(biteWithWords)))
 
 	for scanner.Scan() {
@@ -30,15 +33,20 @@ func GetSliceOfWords(biteWithWords []byte) ([]string, error) {
 				w.count = w.count + 1
 				continue
 			}
-			totalWordSum[s] = &word{
+			totalWordSum[s] = &struct {
+				count int
+				word  string
+			}{
 				count: 1,
 				word:  s,
 			}
-
 		}
 	}
 	//обратно в масив для сортировки
-	var totalWordSumArray = make([]*word, 0, len(totalWordSum))
+	var totalWordSumArray = make([]*struct {
+		count int
+		word  string
+	}, 0, len(totalWordSum))
 	for _, w := range totalWordSum {
 		totalWordSumArray = append(totalWordSumArray, w)
 	}
