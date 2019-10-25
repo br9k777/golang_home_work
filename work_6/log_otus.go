@@ -53,5 +53,4 @@ type OtusEvent interface {
 //Log логируем событие Otus
 func Log(e OtusEvent, w io.Writer) {
 	e.LogIt(w)
-	return
 }

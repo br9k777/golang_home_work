@@ -21,14 +21,10 @@ func init() {
 	zap.ReplaceGlobals(log)
 }
 
-var reflectValueOf = reflect.ValueOf
-
-// var reflectSwapper = reflect.Swapper
-
 //FindMax поиск максимального элемента используя функцию
 func FindMax(slice interface{}, max func(i, j int) bool) interface{} {
 
-	rv := reflectValueOf(slice)
+	rv := reflect.ValueOf(slice)
 
 	if slice == nil || rv.IsNil() || rv.Kind() != reflect.Slice {
 		return slice
@@ -47,7 +43,7 @@ func FindMax(slice interface{}, max func(i, j int) bool) interface{} {
 
 	// quickSort_func(lessSwap{max, swap}, 0, length, maxDepth(length))
 	var maxElement int
-	for i := 1; i < length; i++ {
+	for i := 0; i < length; i++ {
 		if max(i, maxElement) {
 			maxElement = i
 		}

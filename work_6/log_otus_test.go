@@ -49,7 +49,7 @@ func TestLog(t *testing.T) {
 		},
 	}
 	var eOtus OtusEvent
-	// var ok bool
+
 	for _, e := range events {
 		// e.(OtusEvent).LogIt(os.Stdout)
 		switch e.(type) {
@@ -62,12 +62,4 @@ func TestLog(t *testing.T) {
 		}
 		eOtus.LogIt(os.Stdout)
 	}
-
-	// var event OtusEvent = &HwSubmitted{
-	// 	ID:      6715,
-	// 	Code:    `-------code-------`,
-	// 	Comment: `Pls see it`,
-	// }
-	// Log(event, os.Stdout)
-	return
 }

@@ -27,6 +27,4 @@ func TestGetMax(t *testing.T) {
 
 	fmt.Printf("slice %v Наибольший элемент %#v\n", s2, FindMax(s2, func(i, j int) bool { return len(s2[i]) > len(s2[j]) }))
 
-	return
-
 }
