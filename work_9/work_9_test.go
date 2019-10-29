@@ -32,13 +32,13 @@ func TestSetLogger(t *testing.T) {
 }
 
 func createFileForTest(filePath string, fileSize int64) error {
-
-	f, err := os.Create(filePath)
-	defer f.Close()
-	if err != nil {
+	var err error
+	var f *os.File
+	if f, err = os.Create(filePath); err != nil {
 		log.Error(`Ошибка создания тестового файла`, zap.Error(err))
 		return err
 	}
+	defer f.Close()
 
 	fb := bufio.NewWriter(f)
 	defer fb.Flush()
@@ -86,13 +86,22 @@ func TestWork9Prepare(t *testing.T) {
 
 func TestWork9(t *testing.T) {
 	// t.Skip()
-
-	CopyFile(defaultInFile, `/tmp/out_file_test_1`, 0, defaultIBS, defaultOBS)
-	CopyFile(defaultInFile, `/tmp/out_file_test_2`, inFileSize/2, defaultIBS, defaultOBS)
-	CopyFile(defaultInFile, `/tmp/out_file_test_3`, inFileSize/2+10240, defaultIBS, defaultOBS)
+	var err error
+	if err = CopyFile(defaultInFile, `/tmp/out_file_test_1`, 0, defaultIBS, defaultOBS); err != nil {
+		log.Error(`Ошибка копирования в тесте 1 - файл целиком`, zap.Error(err))
+	}
+	if err = CopyFile(defaultInFile, `/tmp/out_file_test_2`, inFileSize/2, defaultIBS, defaultOBS); err != nil {
+		log.Error(`Ошибка копирования в тесте 2 - половины файла`, zap.Error(err))
+	}
+	if err = CopyFile(defaultInFile, `/tmp/out_file_test_3`, inFileSize/2+10240, defaultIBS, defaultOBS); err != nil {
+		log.Error(`Ошибка копирования в тесте 3 - копирование куска файла не кратного размеру буфера чтения`, zap.Error(err))
+	}
 
 }
 
 func TestFeedBack(t *testing.T) {
-	CopyFile(`Makefile`, `file.txt`, 0, 512, 512)
+	var err error
+	if err = CopyFile(`Makefile`, `/tmp/file.txt`, 0, 512, 512); err != nil {
+		log.Error(`Ошибка копирования в тесте 4 - копирование файла Makefile`, zap.Error(err))
+	}
 }

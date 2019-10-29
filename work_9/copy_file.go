@@ -31,8 +31,7 @@ func CopyFile(inPath, outPath string, offset int64, ibs, obs int) error {
 		fmt.Fprintf(os.Stderr, "Не удалось пуолучить информацию о файле %s\n", inPath)
 		return err
 	}
-	var inFileSize int64
-	inFileSize = fInfo.Size()
+	var inFileSize int64 = fInfo.Size()
 	if _, err = in.Seek(offset, 0); err != nil {
 		fmt.Fprintf(os.Stderr, "Ошибка смещения по файлу %s размером %d на %d байт от начала\n", inPath, inFileSize, offset)
 		return err
@@ -65,10 +64,11 @@ func CopyFile(inPath, outPath string, offset int64, ibs, obs int) error {
 func Copy(reader io.ReadWriteSeeker, readBuf []byte, writer *bufio.Writer, sizeForCopy int64) error {
 	var err error
 	var readBytes int
-	// reader := io.LimitReader(in, sizeForCopy)
-	// bar := progressbar.New(int(sizeForCopy / int64(len(readBuf))))
-
-	bar := progressbar.NewOptions(int(sizeForCopy/int64(len(readBuf))),
+	barMaxCount := int(sizeForCopy / int64(len(readBuf)))
+	if sizeForCopy%int64(len(readBuf)) != 0 {
+		barMaxCount++
+	}
+	bar := progressbar.NewOptions(barMaxCount,
 		progressbar.OptionSetPredictTime(false),
 	)
 	for {
