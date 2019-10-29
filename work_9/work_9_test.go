@@ -1,10 +1,6 @@
 package main
 
 import (
-	// "fmt"
-	// "os"
-	// log "github.com/sirupsen/logrus"
-
 	"bufio"
 	"bytes"
 	"crypto/rand"
@@ -15,12 +11,6 @@ import (
 
 	"github.com/cheggaaa/pb"
 	"go.uber.org/zap"
-	// "github.com/urfave/cli"
-	// "io/ioutil"
-	// "regexp"
-	// "strconv"
-	// "strings"
-	// "time"
 )
 
 func TestSetLogger(t *testing.T) {
@@ -85,7 +75,6 @@ func TestWork9Prepare(t *testing.T) {
 }
 
 func TestWork9(t *testing.T) {
-	// t.Skip()
 	var err error
 	if err = CopyFile(defaultInFile, `/tmp/out_file_test_1`, 0, defaultIBS, defaultOBS); err != nil {
 		log.Error(`Ошибка копирования в тесте 1 - файл целиком`, zap.Error(err))

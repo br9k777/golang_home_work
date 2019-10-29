@@ -8,12 +8,11 @@ import (
 
 	"github.com/schollz/progressbar"
 	"go.uber.org/zap"
-	// "github.com/spf13/viper"
 )
 
-// CopyFile копирует данные из файла по пути inPath в файл по пути outPath
+// CopyFile копирует данные из файла по пути inPath в файл по пути outPath.
 // Используя смещение в исходном файле offset
-// читая за раз ibs и пишет за раз obs
+// читая за раз ibs и пишет за раз obs.
 func CopyFile(inPath, outPath string, offset int64, ibs, obs int) error {
 	var (
 		in, out *os.File
@@ -45,10 +44,6 @@ func CopyFile(inPath, outPath string, offset int64, ibs, obs int) error {
 		return err
 	}
 	defer out.Close()
-	// bar := progressbar.NewOptions(
-	// 	int(sizeForCopy),
-	// 	progressbar.OptionSetBytes(int(sizeForCopy)),
-	// )
 	writer := bufio.NewWriterSize(out, obs)
 	if err = Copy(in, make([]byte, ibs), writer, sizeForCopy); err != nil {
 		return err
@@ -60,7 +55,8 @@ func CopyFile(inPath, outPath string, offset int64, ibs, obs int) error {
 	return nil
 }
 
-//Copy производим копирование используя полученные буферы
+// Copy производим копирование используя полученные буферы.
+// Размер файла нужен для прогресс бара.
 func Copy(reader io.ReadWriteSeeker, readBuf []byte, writer *bufio.Writer, sizeForCopy int64) error {
 	var err error
 	var readBytes int

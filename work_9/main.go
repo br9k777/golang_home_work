@@ -6,7 +6,6 @@ import (
 
 	flag "github.com/spf13/pflag"
 	"go.uber.org/zap"
-	// "github.com/spf13/viper"
 )
 
 const (
@@ -31,7 +30,6 @@ func init() {
 	}
 	zap.ReplaceGlobals(log)
 	flag.StringVarP(&input, "in_file", "i", "", "ввести путь до файла источника `ПУТЬ_ДО_ФАЙЛА_ИСТОЧНИКА`")
-	//
 	flag.Lookup("in_file").NoOptDefVal = defaultInFile
 	flag.StringVarP(&output, "out_file", "o", "", "ввести путь до файла источника `ПУТЬ_ДО_НОВОГО_ИСТОЧНИКА`")
 	flag.Lookup("out_file").NoOptDefVal = defaultOutFile
@@ -47,7 +45,6 @@ func main() {
 	if input != `` && output != `` {
 		fmt.Printf("Берем из файла %s копируем в файл %s. Смешение %d.\n", input, output, offset)
 		fmt.Printf("Читаем за раз %d. Пишем за раз %d.\n", ibs, obs)
-		// fmt.Printf("Запускаем копирование.\n")
 		if err = CopyFile(input, output, offset, ibs, obs); err != nil {
 			fmt.Fprintf(os.Stderr, `Во вреия копирования произошла ошибка %s`, err)
 		}
