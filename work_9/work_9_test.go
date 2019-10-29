@@ -14,7 +14,7 @@ import (
 	"testing"
 
 	"github.com/cheggaaa/pb"
-	log "github.com/sirupsen/logrus"
+	"go.uber.org/zap"
 	// "github.com/urfave/cli"
 	// "io/ioutil"
 	// "regexp"
@@ -23,12 +23,20 @@ import (
 	// "time"
 )
 
+func TestSetLogger(t *testing.T) {
+	var err error
+	if log, err = zap.NewDevelopment(); err != nil {
+		fmt.Fprint(os.Stderr, err)
+		os.Exit(1)
+	}
+}
+
 func createFileForTest(filePath string, fileSize int64) error {
 
 	f, err := os.Create(filePath)
 	defer f.Close()
 	if err != nil {
-		log.Error(err)
+		log.Error(`Ошибка создания тестового файла`, zap.Error(err))
 		return err
 	}
 
@@ -57,28 +65,34 @@ func PrepareForTest(fileSizeForTest int64) {
 	if f, err := os.Open(defaultInFile); err == nil {
 		if fInfo, err2 := f.Stat(); err2 == nil {
 			if fInfo.Size() == fileSizeForTest {
-				fmt.Printf("Файл %s размером %d байт уже создан\n", defaultInFile, fileSizeForTest)
+				// "Файл размером уже создан
 				return
 			}
 		}
 	}
-	fmt.Printf("Создаем файл для тестов, из которого будем читать %s\n", defaultInFile)
+	fmt.Printf("Создаем файл для тестов, из которого будем читать %s. Размер %f Мбайт\n", defaultInFile, float64(fileSizeForTest/1024/1024))
 	if err := createFileForTest(defaultInFile, fileSizeForTest); err != nil {
-		log.Errorf(`Ошибка при создании файла для тестирования %s`, defaultInFile)
+		log.Error(`Ошибка при создании файла для тестирования`, zap.String(`File`, defaultInFile))
 		return
 	}
 }
 
-func TestWork11(t *testing.T) {
+const inFileSize = defaultIBS * 1024 * 1024
 
-	// fmt.Printf("The date is %s\n", out)
-	log.SetOutput(os.Stdout)
-	log.SetLevel(log.InfoLevel)
-	var inFileSize int64
-	inFileSize = defaultIBS * 1000000
+func TestWork9Prepare(t *testing.T) {
 	PrepareForTest(inFileSize)
+
+}
+
+func TestWork9(t *testing.T) {
+	// t.Skip()
+
 	CopyFile(defaultInFile, `/tmp/out_file_test_1`, 0, defaultIBS, defaultOBS)
 	CopyFile(defaultInFile, `/tmp/out_file_test_2`, inFileSize/2, defaultIBS, defaultOBS)
 	CopyFile(defaultInFile, `/tmp/out_file_test_3`, inFileSize/2+10240, defaultIBS, defaultOBS)
 
+}
+
+func TestFeedBack(t *testing.T) {
+	CopyFile(`Makefile`, `file.txt`, 0, 512, 512)
 }

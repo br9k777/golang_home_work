@@ -6,8 +6,8 @@ import (
 	"io"
 	"os"
 
-	pb "github.com/cheggaaa/pb/v3"
-	log "github.com/sirupsen/logrus"
+	"github.com/schollz/progressbar"
+	"go.uber.org/zap"
 	// "github.com/spf13/viper"
 )
 
@@ -46,37 +46,48 @@ func CopyFile(inPath, outPath string, offset int64, ibs, obs int) error {
 		return err
 	}
 	defer out.Close()
+	// bar := progressbar.NewOptions(
+	// 	int(sizeForCopy),
+	// 	progressbar.OptionSetBytes(int(sizeForCopy)),
+	// )
+	writer := bufio.NewWriterSize(out, obs)
+	if err = Copy(in, make([]byte, ibs), writer, sizeForCopy); err != nil {
+		return err
+	}
+	if err = writer.Flush(); err != nil {
+		return err
+	}
+	fmt.Printf("\t\tФайл %s закончил копирование\n", outPath)
+	return nil
+}
 
-	reader := io.LimitReader(in, sizeForCopy)
-	bar := pb.Full.Start64(sizeForCopy)
-	barReader := bar.NewProxyReader(reader)
+//Copy производим копирование используя полученные буферы
+func Copy(reader io.ReadWriteSeeker, readBuf []byte, writer *bufio.Writer, sizeForCopy int64) error {
+	var err error
+	var readBytes int
+	// reader := io.LimitReader(in, sizeForCopy)
+	// bar := progressbar.New(int(sizeForCopy / int64(len(readBuf))))
 
-	readBuf := make([]byte, ibs)
-	var read int
-	outBuf := bufio.NewWriterSize(out, obs)
+	bar := progressbar.NewOptions(int(sizeForCopy/int64(len(readBuf))),
+		progressbar.OptionSetPredictTime(false),
+	)
 	for {
-
-		read, err = barReader.Read(readBuf)
+		readBytes, err = reader.Read(readBuf)
 		if err == io.EOF {
-			outBuf.Write(readBuf[0:read])
-			bar.Finish()
-			readPosition, _ := in.Seek(0, 1)
-			outPosition, _ := out.Seek(0, 1)
-			fmt.Printf("Файл закончился при четнии со смещения %d с размером буфера %d\n", readPosition, ibs)
-			fmt.Printf("При последенем чтении успешно прочитано %d байт\n", read)
-			fmt.Printf("Записываемый файл закончил писатся при смещении %d с размером буфера %d\n", outPosition, obs)
-			log.Debugf(`Cам буфер %#v`, readBuf)
-			break
+			if _, err = writer.Write(readBuf[0:readBytes]); err != nil {
+				return err
+			}
+			return nil
 		}
-		outBuf.Write(readBuf)
 		if err != nil {
-			readPosition, _ := in.Seek(0, 1)
-			log.Errorf(`Ошибка при смещении %d с буфром %#v`, readPosition, readBuf)
-			fmt.Printf("Failed to read: %v", err)
 			return err
 		}
-	}
-	bar.Finish()
 
-	return nil
+		if _, err = writer.Write(readBuf[0:readBytes]); err != nil {
+			return err
+		}
+		if err = bar.Add(1); err != nil {
+			log.Warn("Ошибка progressbar", zap.Error(err))
+		}
+	}
 }
