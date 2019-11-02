@@ -1,0 +1,4 @@
+logconfigurationfile: zapConfig.json
+servicehost: 127.0.0.1
+serviceport: "6471"
+standardlogger: production
