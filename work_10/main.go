@@ -6,12 +6,30 @@ import (
 	"time"
 
 	"github.com/urfave/cli"
+	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 )
 
+// CustomTimeEncoder function of own formulating time for output to the log
+func CustomTimeEncoder(t time.Time, enc zapcore.PrimitiveArrayEncoder) {
+	enc.AppendString(t.Format("2006-01-02 15:04:05.000"))
+}
+
 func main() {
+
+	config := zap.NewProductionConfig()
+	config.EncoderConfig.EncodeTime = CustomTimeEncoder
+	config.Encoding = "console"
+	var err error
+	var logger *zap.Logger
+	if logger, err = config.Build(); err != nil {
+		zap.L().Fatal("Logger create error", zap.Error(err))
+	}
+	zap.ReplaceGlobals(logger)
+
 	app := cli.NewApp()
 	app.Name = "go-envdir"
-	app.Version = "1.0.0"
+	app.Version = "1.0.1"
 	app.Compiled = time.Now()
 	app.Usage = "runs another program with environment modified according to files in a specified directory."
 	app.UsageText = fmt.Sprintf("%s путь_до_директории_с_файлами_переменных_окружения вызов_какой_либо_программы", app.Name)
@@ -36,8 +54,8 @@ func main() {
 		return nil
 
 	}
-	if err := app.Run(os.Args); err != nil {
-		fmt.Fprintf(writerErr, "ERROR: %s", err)
-	}
 
+	if err := app.Run(os.Args); err != nil {
+		zap.S().Error(err)
+	}
 }

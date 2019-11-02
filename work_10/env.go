@@ -14,7 +14,7 @@ func GetEnviromentsFromDir(pathToDir string) (map[string]string, error) {
 	// чистим путь до файлов, в теории поможет при использовании на windows
 	clearDirPath := filepath.Clean(pathToDir)
 	if c, err := os.Stat(clearDirPath); os.IsNotExist(err) || !c.Mode().IsDir() {
-		return nil, fmt.Errorf(`Не удалось получить доступ к папке %s`, clearDirPath)
+		return nil, fmt.Errorf("Can't reach directory %s", clearDirPath)
 	}
 	var err error
 	var files []os.FileInfo
@@ -46,7 +46,7 @@ func GetEnviromentsFromDir(pathToDir string) (map[string]string, error) {
 // используя переменные из map enviroments.
 func RunProgragWirhEnviroments(enviroments map[string]string, program string) error {
 	command := exec.Command(program)
-	newEnivroments := make([]string, len(enviroments))
+	newEnivroments := make([]string, 0, len(enviroments))
 	for envName, envValue := range enviroments {
 		newEnivroments = append(newEnivroments, fmt.Sprintf("%s=%s", envName, envValue))
 	}

@@ -1,9 +1,3 @@
-APP?=work_10
-RELEASE?=1.0.1
-GOOS?=linux
-
-COMMIT?=$(shell git rev-parse --short HEAD)
-BUILD_TIME?=$(shell date -u '+%Y-%m-%d_%H:%M:%S')
 GOPATH?=$(go env GOPATH)
 
 .PHONY: setup

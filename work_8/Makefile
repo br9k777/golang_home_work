@@ -12,12 +12,8 @@ setup: ## Install all the build and lint dependencies
 # 	@$(MAKE) dep
 
 .PHONY: test
-test1: ## Run all the tests		
-	SET_STANDARD_LOGGER=production work_11
-test2:
-	SET_STANDARD_LOGGER=development SERVICE_HOST="0.0.0.0" SERVICE_PORT="3246" work_11
-test3:	
-	LOG_CONFIG_FILE=zapConfig.json  SERVICE_HOST="127.0.0.1" SERVICE_PORT="6471" work_11
+test: ## Run all the tests		
+	go test
 #echo 'mode: atomic' > coverage.txt && go test -covermode=atomic -coverprofile=coverage.txt -v -race -timeout=30s ./...
 
 # .PHONY: cover
