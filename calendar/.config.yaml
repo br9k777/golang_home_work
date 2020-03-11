@@ -1,0 +1,3 @@
+servicehost: localhost
+serviceport: "5157"
+standardlogger: production
